@@ -1,8 +1,8 @@
 <template>
   <img
     @click="onClick()"
-    :src="require(`../assets/${symbolName}`)"
-    alt="A mana symbol"
+    :src="require(`../assets/${symbolSrc}`)"
+    :alt="`A ${symbolName} mana symbol`"
     :class="btnActive ? '' : 'inactive'"
   />
 </template>
@@ -11,18 +11,26 @@
 export default {
   name: "ManaSymbolButton",
   props: {
+    symbolSrc: String,
     symbolName: String,
-    active: Boolean,
+    id: Number,
   },
   data() {
     return {
-      btnActive: false,
+      arrayId: this.id,
     };
   },
   methods: {
     onClick() {
       this.$emit("mana-symbol-click");
-      this.btnActive = !this.btnActive;
+      this.$store.commit("toggleBtn", this.arrayId);
+    },
+  },
+  computed: {
+    btnActive: {
+      get() {
+        return this.$store.state.manaSymbols[this.arrayId - 1].isActive;
+      },
     },
   },
 };
