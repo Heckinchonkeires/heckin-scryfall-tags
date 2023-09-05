@@ -1,70 +1,79 @@
 import { createStore } from "vuex";
+import CardService from "@/CardService";
 
 export default createStore({
   state: {
     manaSymbols: [
       {
-        id: 1,
+        id: 0,
         src: "W.png",
         name: "white",
         shortName: "W",
         isActive: false,
       },
       {
-        id: 2,
+        id: 1,
         src: "U.png",
         name: "blue",
         shortName: "U",
         isActive: false,
       },
       {
-        id: 3,
+        id: 2,
         src: "B.png",
         name: "black",
         shortName: "B",
         isActive: false,
       },
       {
-        id: 4,
+        id: 3,
         src: "R.png",
         name: "red",
         shortName: "R",
         isActive: false,
       },
       {
-        id: 5,
+        id: 4,
         src: "G.png",
         name: "green",
         shortName: "G",
         isActive: false,
       },
       {
-        id: 6,
+        id: 5,
         src: "C.png",
         name: "colorless",
         shortName: "C",
         isActive: false,
       },
     ],
-    randomCard: null,
+    cardDisplay: null,
+    cardName: null,
   },
   getters: {},
   mutations: {
     toggleBtn(state, id) {
-      state.manaSymbols[id - 1].isActive = !state.manaSymbols[id - 1].isActive;
+      state.manaSymbols[id].isActive = !state.manaSymbols[id].isActive;
     },
-    setRandomCard(state, newCard) {
-      state.randomCard = newCard;
+    setBtn(state, { id, isActive }) {
+      state.manaSymbols[id].isActive = isActive;
+    },
+    setCardDisplay(state, newCard) {
+      state.cardDisplay = newCard;
+    },
+    setCardName(state, newValue) {
+      state.cardName = newValue;
     },
   },
   actions: {
     setRandomCard({ commit, state }) {
-      let queryString = "?q=f%3Acommander%20commander%3A";
+      // let queryString = "?q=f%3Acommander%20commander%3A";
+      let colors = "";
       let countActive = 0;
       const symbolsArray = JSON.parse(JSON.stringify(state.manaSymbols));
       symbolsArray.forEach((symbol) => {
         if (symbol.isActive) {
-          queryString += symbol.shortName;
+          colors += symbol.shortName;
           countActive++;
         }
       });
@@ -76,10 +85,66 @@ export default createStore({
         alert("Colorless may not be included in color combinations");
         return;
       }
-      fetch(`https://api.scryfall.com/cards/random${queryString}`)
-        .then((res) => res.json())
+      // fetch(`https://api.scryfall.com/cards/random${queryString}`)
+      //   .then((res) => {
+      //     if (!res.ok) {
+      //       throw new Error("Network error");
+      //     }
+      //     return res.json();
+      //   })
+      //   .then((res) => {
+      //     commit("setCardDisplay", res.image_uris.small);
+      //   })
+      //   .catch((error) => {
+      //     console.error(error);
+      //   });
+      CardService.getRandom(colors)
+        // .then((res) => {
+        //   // if (!res.ok) {
+        //   //   throw new Error("Network error");
+        //   // }
+        //   return res.json();
+        // })
         .then((res) => {
-          commit("setRandomCard", res.image_uris.small);
+          commit("setCardDisplay", res.image_uris.small);
+        })
+        .catch((error) => {
+          console.error(error);
+        });
+    },
+    setCardName({ commit }, newValue) {
+      commit("setCardName", newValue);
+    },
+    getCard({ commit, state }, cardName) {
+      if (cardName === null) {
+        alert("Please input a card name");
+        return;
+      }
+      CardService.getByName(cardName)
+        .then((res) => {
+          const symbolsArray = JSON.parse(JSON.stringify(state.manaSymbols));
+          //there's probably a cleaner way to do this
+          if (res.color_identity.length === 0) {
+            symbolsArray.forEach((symbol, index) => {
+              if (symbol.shortName === "C") {
+                commit("setBtn", { id: index, isActive: true });
+              } else {
+                commit("setBtn", { id: index, isActive: false });
+              }
+            });
+          } else {
+            symbolsArray.forEach((symbol, index) => {
+              if (res.color_identity.includes(symbol.shortName)) {
+                commit("setBtn", { id: index, isActive: true });
+              } else {
+                commit("setBtn", { id: index, isActive: false });
+              }
+            });
+          }
+          commit("setCardDisplay", res.image_uris.small);
+        })
+        .catch((error) => {
+          console.error(error);
         });
     },
   },

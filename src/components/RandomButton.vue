@@ -10,7 +10,7 @@
 
 <script>
 export default {
-  name: "SubmitButton",
+  name: "RandomButton",
   props: {
     text: String,
     color: String,
@@ -23,7 +23,7 @@ export default {
   methods: {
     onClick() {
       if (this.isActive) {
-        this.$emit("submit-btn-click");
+        this.$emit("random-btn-click");
         this.isActive = false;
         setTimeout(() => {
           this.isActive = true;

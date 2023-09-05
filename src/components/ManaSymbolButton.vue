@@ -29,7 +29,7 @@ export default {
   computed: {
     btnActive: {
       get() {
-        return this.$store.state.manaSymbols[this.arrayId - 1].isActive;
+        return this.$store.state.manaSymbols[this.arrayId].isActive;
       },
     },
   },
