@@ -72,12 +72,10 @@ export default createStore({
     },
     addCards(state, cards) {
       state.foundCards = [];
+      //only add the first 10 cards for now
       for (let i = 0; i < 10; i++) {
         state.foundCards.push(cards[i]);
       }
-      // cards.forEach((card) => {
-      //   state.foundCards.push(card);
-      // });
     },
     addTags(state, tags) {
       state.currentTags = [];
@@ -87,7 +85,8 @@ export default createStore({
     },
   },
   actions: {
-    setRandomCard({ commit, state }) {
+    async setRandomCard({ commit, state }) {
+      //some input validation
       let colors = "";
       let countActive = 0;
       const symbolsArray = JSON.parse(JSON.stringify(state.manaSymbols));
@@ -105,14 +104,9 @@ export default createStore({
         alert("Colorless may not be included in color combinations");
         return;
       }
-      CardService.getRandom(colors)
-        .then((res) => {
-          commit("setCurrentCardData", res);
-          commit("setCardDisplay", res.image_uris.small);
-        })
-        .catch((error) => {
-          console.error(error);
-        });
+      const randomCard = await CardService.getRandom(colors);
+      commit("setCurrentCardData", randomCard);
+      commit("setCardDisplay", randomCard.image_uris.small);
     },
     setCardName({ commit }, newValue) {
       commit("setCardName", newValue);

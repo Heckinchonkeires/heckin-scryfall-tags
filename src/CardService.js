@@ -1,3 +1,6 @@
+/*
+ *  Handles getting card data from the backend API
+ */
 const url = "api/cards/";
 class CardService {
   static getByName(name) {

@@ -24,6 +24,7 @@
     <div>
       <img :src="this.$store.state.cardDisplay" alt="" />
     </div>
+    <!-- Just in case we need to see what the current card data looks like -->
     <!-- <p>{{ this.$store.state.currentCardData }}</p> -->
     <p>{{ this.$store.state.currentTags }}</p>
     <div>
