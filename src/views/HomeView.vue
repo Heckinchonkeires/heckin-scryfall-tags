@@ -1,11 +1,12 @@
 <template>
   <div>
-    <CardNameInput />
+    <CardNameInput @submit-card-name="submitCardName" />
     <SubmitButton
-      @submit-btn-click="submitBtnClick"
+      @submit-card-name="submitCardName"
       :text="'submit'"
       :color="'lightblue'"
     />
+    <br />
     <RandomButton
       @random-btn-click="randomBtnClick"
       :text="'random'"
@@ -22,6 +23,15 @@
     </div>
     <div>
       <img :src="this.$store.state.cardDisplay" alt="" />
+    </div>
+    <!-- <p>{{ this.$store.state.currentCardData }}</p> -->
+    <p>{{ this.$store.state.currentTags }}</p>
+    <div>
+      <img
+        v-for="card in this.$store.state.foundCards"
+        :key="card.oracle_id"
+        :src="card.image_uris.small"
+      />
     </div>
   </div>
 </template>
@@ -42,8 +52,8 @@ export default {
     RandomButton,
   },
   methods: {
-    submitBtnClick() {
-      this.$store.dispatch("getCard", this.$store.state.cardName);
+    submitCardName() {
+      this.$store.dispatch("getCardByName", this.$store.state.cardName);
     },
     randomBtnClick() {
       this.$store.dispatch("setRandomCard");

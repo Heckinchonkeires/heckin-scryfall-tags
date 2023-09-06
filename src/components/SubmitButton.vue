@@ -23,7 +23,7 @@ export default {
   methods: {
     onClick() {
       if (this.isActive) {
-        this.$emit("submit-btn-click");
+        this.$emit("submit-card-name");
         this.isActive = false;
         setTimeout(() => {
           this.isActive = true;

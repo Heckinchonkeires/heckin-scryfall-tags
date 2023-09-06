@@ -49,6 +49,9 @@ export default createStore({
     ],
     cardDisplay: null,
     cardName: null,
+    foundCards: [],
+    currentTags: [],
+    currentCardData: null,
   },
   getters: {},
   mutations: {
@@ -64,10 +67,27 @@ export default createStore({
     setCardName(state, newValue) {
       state.cardName = newValue;
     },
+    setCurrentCardData(state, data) {
+      state.currentCardData = data;
+    },
+    addCards(state, cards) {
+      state.foundCards = [];
+      for (let i = 0; i < 10; i++) {
+        state.foundCards.push(cards[i]);
+      }
+      // cards.forEach((card) => {
+      //   state.foundCards.push(card);
+      // });
+    },
+    addTags(state, tags) {
+      state.currentTags = [];
+      tags.forEach((tag) => {
+        state.currentTags.push(tag);
+      });
+    },
   },
   actions: {
     setRandomCard({ commit, state }) {
-      // let queryString = "?q=f%3Acommander%20commander%3A";
       let colors = "";
       let countActive = 0;
       const symbolsArray = JSON.parse(JSON.stringify(state.manaSymbols));
@@ -85,27 +105,9 @@ export default createStore({
         alert("Colorless may not be included in color combinations");
         return;
       }
-      // fetch(`https://api.scryfall.com/cards/random${queryString}`)
-      //   .then((res) => {
-      //     if (!res.ok) {
-      //       throw new Error("Network error");
-      //     }
-      //     return res.json();
-      //   })
-      //   .then((res) => {
-      //     commit("setCardDisplay", res.image_uris.small);
-      //   })
-      //   .catch((error) => {
-      //     console.error(error);
-      //   });
       CardService.getRandom(colors)
-        // .then((res) => {
-        //   // if (!res.ok) {
-        //   //   throw new Error("Network error");
-        //   // }
-        //   return res.json();
-        // })
         .then((res) => {
+          commit("setCurrentCardData", res);
           commit("setCardDisplay", res.image_uris.small);
         })
         .catch((error) => {
@@ -115,37 +117,48 @@ export default createStore({
     setCardName({ commit }, newValue) {
       commit("setCardName", newValue);
     },
-    getCard({ commit, state }, cardName) {
+    async getCardByName({ commit, dispatch, state }, cardName) {
       if (cardName === null) {
         alert("Please input a card name");
         return;
       }
-      CardService.getByName(cardName)
-        .then((res) => {
-          const symbolsArray = JSON.parse(JSON.stringify(state.manaSymbols));
-          //there's probably a cleaner way to do this
-          if (res.color_identity.length === 0) {
-            symbolsArray.forEach((symbol, index) => {
-              if (symbol.shortName === "C") {
-                commit("setBtn", { id: index, isActive: true });
-              } else {
-                commit("setBtn", { id: index, isActive: false });
-              }
-            });
+      const card = await CardService.getByName(cardName);
+      const symbolsArray = JSON.parse(JSON.stringify(state.manaSymbols));
+      if (card.color_identity.length === 0) {
+        symbolsArray.forEach((symbol, index) => {
+          if (symbol.shortName === "C") {
+            commit("setBtn", { id: index, isActive: true });
           } else {
-            symbolsArray.forEach((symbol, index) => {
-              if (res.color_identity.includes(symbol.shortName)) {
-                commit("setBtn", { id: index, isActive: true });
-              } else {
-                commit("setBtn", { id: index, isActive: false });
-              }
-            });
+            commit("setBtn", { id: index, isActive: false });
           }
-          commit("setCardDisplay", res.image_uris.small);
-        })
-        .catch((error) => {
-          console.error(error);
         });
+      } else {
+        symbolsArray.forEach((symbol, index) => {
+          if (card.color_identity.includes(symbol.shortName)) {
+            commit("setBtn", { id: index, isActive: true });
+          } else {
+            commit("setBtn", { id: index, isActive: false });
+          }
+        });
+      }
+      commit("setCardDisplay", card.image_uris.small);
+      await dispatch("updateCurrentCardData", card);
+      await dispatch("getCardTags", {
+        set: state.currentCardData.set,
+        number: state.currentCardData.collector_number,
+      });
+      dispatch("getCardsByTags", state.currentTags);
+    },
+    updateCurrentCardData({ commit }, data) {
+      commit("setCurrentCardData", data);
+    },
+    async getCardTags({ commit }, { set, number }) {
+      const tags = await CardService.getTags(set, number);
+      commit("addTags", tags.tags);
+    },
+    async getCardsByTags({ commit }, tags) {
+      const cards = await CardService.getByTags(tags);
+      commit("addCards", cards.data);
     },
   },
   modules: {},
